@@ -69,3 +69,11 @@ TARGET_LINK_LIBRARIES("sbdump"
 
 INSTALL(TARGETS "sbdump"
         RUNTIME DESTINATION "bin")
+
+
+################################################################################
+# scripts
+################################################################################
+
+INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/SyscallAtBlock.awk"
+        DESTINATION "bin")
