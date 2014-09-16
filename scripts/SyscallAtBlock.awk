@@ -5,7 +5,7 @@
 #
 # Example:
 #
-#    smdis ~/program.sb | gawk -f SyscallAtBlock.awk -v block=374
+#    sbdump ~/program.sb | gawk -f SyscallAtBlock.awk -v block=374
 #
 
 function syscallArgParse(a) {
