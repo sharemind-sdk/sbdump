@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <sharemind/codeblock.h>
 #include <sharemind/likely.h>
 #include <sharemind/libexecutable/libexecutable.h>
@@ -213,11 +214,11 @@ bool readProgram(const void * const data, const size_t dataSize) {
     do { \
         printf("Start of section %zx (", si); \
         if (sectionType != SHAREMIND_EXECUTABLE_SECTION_TYPE_INVALID) { \
-            printf("%s):\n", sectionTypeRaw); \
+            printf("%s", sectionTypeRaw); \
         } else { \
             printSpacedHex(sectionTypeRaw, 32u); \
-            printf("):\n"); \
         } \
+        printf(") of size %" PRIu32 ":\n", sh.length); \
     } while(false)
 
 #define PRINT_DATASECTION \
