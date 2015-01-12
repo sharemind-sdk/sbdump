@@ -13,14 +13,14 @@ PROJECT("SHAREMIND_SBDUMP" "C")
 INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/config.local" OPTIONAL)
 INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
 
+FIND_PACKAGE(SharemindCHeaders REQUIRED)
 FIND_PACKAGE(SharemindLibexecutable REQUIRED)
 FIND_PACKAGE(SharemindLibvmi REQUIRED)
-FIND_PACKAGE(SharemindVmGlobals REQUIRED)
 
 INCLUDE_DIRECTORIES(
+    ${SharemindCHeaders_INCLUDE_DIRS}
     ${SharemindLibexecutable_INCLUDE_DIRS}
     ${SharemindLibvmi_INCLUDE_DIRS}
-    ${SharemindVmGlobals_INCLUDE_DIRS}
 )
 
 ADD_COMPILE_OPTIONS(
@@ -45,9 +45,9 @@ CHECK_ADD_COMPILER_FLAG("-Weverything")
 CHECK_ADD_COMPILER_FLAG("-Wlogical-op")
 
 ADD_DEFINITIONS(
+    ${SharemindCHeaders_DEFINITIONS}
     ${SharemindLibexecutable_DEFINITIONS}
     ${SharemindLibvmi_DEFINITIONS}
-    ${SharemindVmGlobals_DEFINITIONS}
     "-D__STDC_LIMIT_MACROS" "-D_XOPEN_SOURCE=700"
 )
 
