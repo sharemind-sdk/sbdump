@@ -144,10 +144,9 @@ ParseError addCodeSection(const void * data,
     return PARSE_OK;
 }
 
-#define RPRETURN(e,p) \
+#define RP_RETURN_ERR(e,p) \
     do { \
-        if ((e) == PARSE_OK) \
-            return true; \
+        assert((e) != PARSE_OK); \
         fprintf(stderr, "Parse error %s at offset %tx\n", \
                 ParseError_toString((e)), \
                 ((const char *)((p))) - ((const char *)(data))); \
@@ -159,15 +158,16 @@ bool readProgram(const void * const data, const size_t dataSize) {
     assert(data);
 
     if (dataSize < sizeof(SharemindExecutableCommonHeader))
-        RPRETURN(PARSE_ERROR_INVALID_HEADER, data);
+        RP_RETURN_ERR(PARSE_ERROR_INVALID_HEADER, data);
 
     SharemindExecutableCommonHeader ch;
     if (SharemindExecutableCommonHeader_read(data, &ch)
         != SHAREMIND_EXECUTABLE_READ_OK)
-        RPRETURN(PARSE_ERROR_INVALID_HEADER, data);
+        RP_RETURN_ERR(PARSE_ERROR_INVALID_HEADER, data);
 
     if (ch.fileFormatVersion > 0u)
-        RPRETURN(PARSE_ERROR_INVALID_HEADER, data); /** \todo new error code? */
+        /** \todo new error code? */
+        RP_RETURN_ERR(PARSE_ERROR_INVALID_HEADER, data);
 
 
     const void * pos =
@@ -176,7 +176,7 @@ bool readProgram(const void * const data, const size_t dataSize) {
     SharemindExecutableHeader0x0 h;
     if (SharemindExecutableHeader0x0_read(pos, &h)
         != SHAREMIND_EXECUTABLE_READ_OK)
-        RPRETURN(PARSE_ERROR_INVALID_HEADER, pos);
+        RP_RETURN_ERR(PARSE_ERROR_INVALID_HEADER, pos);
 
     pos = ((const uint8_t *) pos) + sizeof(SharemindExecutableHeader0x0);
 
@@ -187,7 +187,7 @@ bool readProgram(const void * const data, const size_t dataSize) {
         SharemindExecutableUnitHeader0x0 uh;
         if (SharemindExecutableUnitHeader0x0_read(pos, &uh)
             != SHAREMIND_EXECUTABLE_READ_OK)
-            RPRETURN(PARSE_ERROR_INVALID_HEADER, pos);
+            RP_RETURN_ERR(PARSE_ERROR_INVALID_HEADER, pos);
 
         memcpy(unitTypeRaw, uh.type, 32u);
         printf("Start of unit %zx (", ui);
@@ -206,7 +206,7 @@ bool readProgram(const void * const data, const size_t dataSize) {
             SharemindExecutableSectionHeader0x0 sh;
             if (SharemindExecutableSectionHeader0x0_read(pos, &sh)
                 != SHAREMIND_EXECUTABLE_READ_OK)
-                RPRETURN(PARSE_ERROR_INVALID_HEADER, pos);
+                RP_RETURN_ERR(PARSE_ERROR_INVALID_HEADER, pos);
 
             memcpy(sectionTypeRaw, sh.type, 32u);
             pos = ((const uint8_t *) pos)
@@ -217,7 +217,7 @@ bool readProgram(const void * const data, const size_t dataSize) {
 
 #if SIZE_MAX < UINT32_MAX
             if (unlikely(sh.length > SIZE_MAX))
-                RPRETURN(PARSE_ERROR_OUT_OF_MEMORY, pos);
+                RP_RETURN_ERR(PARSE_ERROR_OUT_OF_MEMORY, pos);
 #endif
 
 #define PRINT_SECTION_HEADER \
@@ -248,11 +248,11 @@ bool readProgram(const void * const data, const size_t dataSize) {
         const char * endPos = ((const char *) pos) + sh.length; \
         /* Check for 0-termination: */ \
         if (unlikely(*(endPos - 1))) \
-            RPRETURN(PARSE_ERROR_INVALID_INPUT_FILE, pos); \
+            RP_RETURN_ERR(PARSE_ERROR_INVALID_INPUT_FILE, pos); \
         size_t bi = 0u; \
         do { \
             if (((const char *) pos)[0u] == '\0') \
-                RPRETURN(PARSE_ERROR_INVALID_INPUT_FILE, pos); \
+                RP_RETURN_ERR(PARSE_ERROR_INVALID_INPUT_FILE, pos); \
             printf("  %zx: %s\n", bi, (const char *) pos); \
             pos = ((const char *) pos) + strlen((const char *) pos) + 1; \
             bi++; \
@@ -269,7 +269,7 @@ bool readProgram(const void * const data, const size_t dataSize) {
                     const ParseError r =
                             addCodeSection(data, pos, sh.length, ui, si);
                     if (r != PARSE_OK)
-                        RPRETURN(r, pos);
+                        RP_RETURN_ERR(r, pos);
 
                     pos = ((const uint8_t *) pos)
                           + sh.length * sizeof(SharemindCodeBlock);
