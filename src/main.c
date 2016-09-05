@@ -133,8 +133,8 @@ ParseError addCodeSection(const void * data,
         i++;
         for (size_t j = 0u; j < instr->numArgs; j++, i++) {
             printf(" ");
-            if (i + j >= size) {
-                printf(" <invalid arguments (need %zx)>\n", instr->numArgs);
+            if (i >= size) {
+                printf(" <too few arguments (need %zx)>\n", instr->numArgs);
                 return PARSE_ERROR_INVALID_ARGUMENTS;
             }
             printNormalHex(&c[i].uint64[0], 8u);
