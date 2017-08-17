@@ -38,8 +38,7 @@
 
 SHAREMIND_STATIC_ASSERT(sizeof(off_t) <= sizeof(size_t));
 
-extern bool fullNames;
-bool fullNames = false;
+static bool fullNames = false;
 
 #define PARSE_ERROR_ENUM \
     ((PARSE_OK, = 0)) \
@@ -51,13 +50,13 @@ bool fullNames = false;
     ((PARSE_ERROR_INVALID_ARGUMENTS,)) \
     ((PARSE_ERROR_DUPLICATE_PDBIND,))
 SHAREMIND_ENUM_CUSTOM_DEFINE(ParseError, PARSE_ERROR_ENUM);
-SHAREMIND_ENUM_DECLARE_TOSTRING(ParseError);
-SHAREMIND_ENUM_CUSTOM_DEFINE_TOSTRING(ParseError, PARSE_ERROR_ENUM)
+static SHAREMIND_ENUM_DECLARE_TOSTRING(ParseError);
+static SHAREMIND_ENUM_CUSTOM_DEFINE_TOSTRING(ParseError, PARSE_ERROR_ENUM)
 
 static const size_t extraPadding[8] = { 0u, 7u, 6u, 5u, 4u, 3u, 2u, 1u };
 
-void printSpacedHex(const void * data, const size_t size);
-void printSpacedHex(const void * data, const size_t size) {
+static void printSpacedHex(const void * data, const size_t size);
+static void printSpacedHex(const void * data, const size_t size) {
     if (size <= 0u)
         return;
     const char * c = (const char *) data;
@@ -66,23 +65,23 @@ void printSpacedHex(const void * data, const size_t size) {
         printf(" %02x", c[i]);
 }
 
-void printNormalHex(const void * data, const size_t size);
-void printNormalHex(const void * data, const size_t size) {
+static void printNormalHex(const void * data, const size_t size);
+static void printNormalHex(const void * data, const size_t size) {
     const char * c = (const char *) data;
     for (size_t i = 0u; i < size; i++)
         printf("%02x", c[i]);
 }
 
-void printHex(const void * data,
-              const void * pos,
-              size_t size,
-              const size_t ui,
-              const size_t si);
-void printHex(const void * data,
-              const void * pos,
-              size_t size,
-              const size_t ui,
-              const size_t si)
+static void printHex(const void * data,
+                     const void * pos,
+                     size_t size,
+                     const size_t ui,
+                     const size_t si);
+static void printHex(const void * data,
+                     const void * pos,
+                     size_t size,
+                     const size_t ui,
+                     const size_t si)
 {
     const char * p = ((const char *) pos);
     size_t offset = 0u;
@@ -100,16 +99,16 @@ void printHex(const void * data,
     }
 }
 
-ParseError addCodeSection(const void * data,
-                          const void * pos,
-                          const size_t size,
-                          const size_t ui,
-                          const size_t si);
-ParseError addCodeSection(const void * data,
-                          const void * pos,
-                          const size_t size,
-                          const size_t ui,
-                          const size_t si)
+static ParseError addCodeSection(const void * data,
+                                 const void * pos,
+                                 const size_t size,
+                                 const size_t ui,
+                                 const size_t si);
+static ParseError addCodeSection(const void * data,
+                                 const void * pos,
+                                 const size_t size,
+                                 const size_t ui,
+                                 const size_t si)
 {
     size_t realOffset = (size_t) (((const char *) pos) - ((const char *) data));
 
@@ -153,8 +152,8 @@ ParseError addCodeSection(const void * data,
         return false; \
     } while (false)
 
-bool readProgram(const void * const data, const size_t dataSize);
-bool readProgram(const void * const data, const size_t dataSize) {
+static bool readProgram(const void * const data, const size_t dataSize);
+static bool readProgram(const void * const data, const size_t dataSize) {
     assert(data);
 
     if (dataSize < sizeof(SharemindExecutableCommonHeader))
