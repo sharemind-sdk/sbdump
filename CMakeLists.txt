@@ -24,12 +24,12 @@ INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/config.local" OPTIONAL)
 INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
 
 FIND_PACKAGE(SharemindCHeaders REQUIRED)
-FIND_PACKAGE(SharemindLibexecutable REQUIRED)
+FIND_PACKAGE(SharemindLibExecutable REQUIRED)
 FIND_PACKAGE(SharemindLibVmi REQUIRED)
 
 INCLUDE_DIRECTORIES(
     ${SharemindCHeaders_INCLUDE_DIRS}
-    ${SharemindLibexecutable_INCLUDE_DIRS}
+    ${SharemindLibExecutable_INCLUDE_DIRS}
     ${SharemindLibVmi_INCLUDE_DIRS}
 )
 
@@ -56,7 +56,7 @@ CHECK_ADD_COMPILER_FLAG("-Wlogical-op")
 
 ADD_DEFINITIONS(
     ${SharemindCHeaders_DEFINITIONS}
-    ${SharemindLibexecutable_DEFINITIONS}
+    ${SharemindLibExecutable_DEFINITIONS}
     ${SharemindLibVmi_DEFINITIONS}
     "-D__STDC_LIMIT_MACROS" "-D_XOPEN_SOURCE=700"
 )
@@ -74,7 +74,7 @@ ADD_CUSTOM_TARGET("include_sbdump_headers_in_IDE"
 
 ADD_EXECUTABLE("sbdump" ${SHAREMIND_SBDUMP_SOURCES})
 TARGET_LINK_LIBRARIES("sbdump"
-                      ${SharemindLibexecutable_LIBRARIES}
+                      ${SharemindLibExecutable_LIBRARIES}
                       ${SharemindLibVmi_LIBRARIES})
 
 INSTALL(TARGETS "sbdump"
