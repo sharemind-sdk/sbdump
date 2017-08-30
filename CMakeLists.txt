@@ -17,73 +17,66 @@
 # For further information, please contact us at sharemind@cyber.ee.
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION "2.8.12")
-PROJECT("SHAREMIND_SBDUMP" "C")
+CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+PROJECT(SharemindSbDump VERSION 1.0.0 LANGUAGES C)
 
 INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/config.local" OPTIONAL)
 INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
+
+FIND_PACKAGE(SharemindCMakeHelpers REQUIRED)
+
+SharemindSetProjectVersion()
+
 
 FIND_PACKAGE(SharemindCHeaders REQUIRED)
 FIND_PACKAGE(SharemindLibExecutable REQUIRED)
 FIND_PACKAGE(SharemindLibVmi REQUIRED)
 
-INCLUDE_DIRECTORIES(
-    ${SharemindCHeaders_INCLUDE_DIRS}
-    ${SharemindLibExecutable_INCLUDE_DIRS}
-    ${SharemindLibVmi_INCLUDE_DIRS}
+
+# sbdump:
+SharemindSetC99CompileOptions(COMPILE_FLAGS "-fwrapv")
+FILE(GLOB_RECURSE SharemindSbDump_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
+FILE(GLOB_RECURSE SharemindSbDump_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+SharemindAddExecutable("sbdump"
+    SOURCES
+        ${SharemindSbDump_SOURCES}
+        ${SharemindSbDump_HEADERS}
+    INCLUDE_DIRECTORIES
+        ${SharemindCHeaders_INCLUDE_DIRS}
+        ${SharemindLibExecutable_INCLUDE_DIRS}
+        ${SharemindLibVmi_INCLUDE_DIRS}
+    COMPILE_DEFINITIONS
+        "_XOPEN_SOURCE=700"
+    LEGACY_DEFINITIONS
+        ${SharemindCHeaders_DEFINITIONS}
+        ${SharemindLibExecutable_DEFINITIONS}
+        ${SharemindLibVmi_DEFINITIONS}
+    LINK_LIBRARIES
+        ${SharemindLibExecutable_LIBRARIES}
+        ${SharemindLibVmi_LIBRARIES}
 )
 
-ADD_COMPILE_OPTIONS(
-    "-std=c99" "-O2" "-fwrapv" "-Wall" "-Wextra" "-Wunused" "-Wabi"
-    "-Wstrict-aliasing=1" "-Wbad-function-cast" "-Wformat" "-Wswitch-default"
-    "-Wfloat-equal" "-Wshadow" "-Wpointer-arith" "-Wcast-qual"
-    "-Wstrict-prototypes" "-Wconversion" "-Wsign-conversion" "-Wunused-macros"
-    "$<$<NOT:$<STREQUAL:$<CONFIGURATION>,Release>>:-fno-omit-frame-pointer>"
-    "$<$<STREQUAL:$<CONFIGURATION>,Release>:-DNDEBUG>"
-    "$<$<STREQUAL:$<CONFIGURATION>,Release>:-fomit-frame-pointer>"
-)
 
-INCLUDE(CheckCCompilerFlag)
-FUNCTION(CHECK_ADD_COMPILER_FLAG flag)
-    STRING(SUBSTRING "${flag}" 1 -1 FlagName)
-    CHECK_C_COMPILER_FLAG("${flag}" C_COMPILER_HAS_${FlagName}_FLAG)
-    IF(C_COMPILER_HAS_${FlagName}_FLAG)
-        ADD_COMPILE_OPTIONS("${flag}")
-    ENDIF()
-ENDFUNCTION()
-CHECK_ADD_COMPILER_FLAG("-Weverything")
-CHECK_ADD_COMPILER_FLAG("-Wlogical-op")
-
-ADD_DEFINITIONS(
-    ${SharemindCHeaders_DEFINITIONS}
-    ${SharemindLibExecutable_DEFINITIONS}
-    ${SharemindLibVmi_DEFINITIONS}
-    "-D__STDC_LIMIT_MACROS" "-D_XOPEN_SOURCE=700"
-)
-
-################################################################################
-# sbdump
-################################################################################
-
-FILE(GLOB_RECURSE SHAREMIND_SBDUMP_SOURCES
-     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
-FILE(GLOB_RECURSE SHAREMIND_SBDUMP_HEADERS
-     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
-ADD_CUSTOM_TARGET("include_sbdump_headers_in_IDE"
-                  SOURCES ${SHAREMIND_SBDUMP_HEADERS})
-
-ADD_EXECUTABLE("sbdump" ${SHAREMIND_SBDUMP_SOURCES})
-TARGET_LINK_LIBRARIES("sbdump"
-                      ${SharemindLibExecutable_LIBRARIES}
-                      ${SharemindLibVmi_LIBRARIES})
-
-INSTALL(TARGETS "sbdump"
-        RUNTIME DESTINATION "bin")
-
-
-################################################################################
-# scripts
-################################################################################
-
+# SyscallAtBlock.awk:
 INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/scripts/SyscallAtBlock.awk"
-        DESTINATION "bin")
+        DESTINATION "bin"
+        COMPONENT "bin")
+
+
+# Packaging:
+SharemindSetupPackaging()
+SharemindAddComponentPackage("bin"
+    NAME "sbdump"
+    DESCRIPTION "Sharemind bytecode dumper"
+    DEB_SECTION "net"
+    DEB_DEPENDS
+        "libsharemind-executable (>= 0.1.0)"
+        "libsharemind-vmi (>= 0.1.0)"
+        "libc6 (>= 2.19)"
+)
+SharemindAddComponentPackage(debug
+    NAME "sbdump-dbg"
+    DESCRIPTION "Sharemind bytecode dumper debug symbols"
+    DEB_SECTION "debug"
+    DEB_DEPENDS "sbdump (= ${SharemindSbDump_VERSION})")
+SharemindPackagingFinalize()
