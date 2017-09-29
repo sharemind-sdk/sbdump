@@ -60,16 +60,16 @@ static void printSpacedHex(const void * data, const size_t size) {
     if (size <= 0u)
         return;
     const char * c = (const char *) data;
-    printf("%02x", c[0u]);
+    printf("%02x", (unsigned) c[0u]);
     for (size_t i = 1u; i < size; i++)
-        printf(" %02x", c[i]);
+        printf(" %02x", (unsigned) c[i]);
 }
 
 static void printNormalHex(const void * data, const size_t size);
 static void printNormalHex(const void * data, const size_t size) {
     const char * c = (const char *) data;
     for (size_t i = 0u; i < size; i++)
-        printf("%02x", c[i]);
+        printf("%02x", (unsigned) c[i]);
 }
 
 static void printHex(const void * data,
@@ -146,9 +146,10 @@ static ParseError addCodeSection(const void * data,
 #define RP_RETURN_ERR(e,p) \
     do { \
         assert((e) != PARSE_OK); \
+        assert(((char const *) p) > ((char const *) data)); \
         fprintf(stderr, "Parse error %s at offset %tx\n", \
                 ParseError_toString((e)), \
-                ((const char *)((p))) - ((const char *)(data))); \
+                (size_t) (((char const *)((p))) - ((char const *)(data)))); \
         return false; \
     } while (false)
 
