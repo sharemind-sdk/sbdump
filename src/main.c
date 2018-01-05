@@ -146,7 +146,7 @@ static ParseError addCodeSection(const void * data,
 #define RP_RETURN_ERR(e,p) \
     do { \
         assert((e) != PARSE_OK); \
-        assert(((char const *) p) > ((char const *) data)); \
+        assert(((char const *) p) >= ((char const *) data)); \
         fprintf(stderr, "Parse error %s at offset %tx\n", \
                 ParseError_toString((e)), \
                 (size_t) (((char const *)((p))) - ((char const *)(data)))); \
