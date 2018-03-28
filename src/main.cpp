@@ -17,6 +17,7 @@
  * For further information, please contact us at sharemind@cyber.ee.
  */
 
+#include <algorithm>
 #include <fcntl.h>
 #include <cassert>
 #include <cinttypes>
@@ -138,22 +139,32 @@ void addCodeSection(void const * data,
     {
         std::printf("  %08zx U%zxS%zx+%08zx  ", realOffset, ui, si, i);
 
-        auto * const instr = sharemind_vm_instruction_from_code(c[i].uint64[0]);
-        if (!instr) {
+        auto const & cm = sharemind::instructionCodeMap();
+        auto const instrIt = cm.find(c[i].uint64[0]);
+        if (instrIt == cm.end()) {
             std::printf("<invalid instruction>\n");
             throw InvalidInstructionException();
         }
-        std::printf("%s ",
-                    fullNames
-                    ? instr->fullName
-                    : sharemind_vm_instruction_fullname_to_name(
-                          instr->fullName));
+        auto const & instr = instrIt->second;
+        if (fullNames) {
+            std::fputs(instr.fullName, stdout);
+            std::putc(' ', stdout);
+        } else {
+            // Only strip first component:
+            auto const end = instr.fullName + instr.fullNameSize;
+            auto name = std::find(instr.fullName, end, '.');
+            assert(name != end);
+            ++name;
+            assert(*name);
+            std::fputs(name, stdout);
+            std::putc(' ', stdout);
+        }
 
         i++;
-        for (std::size_t j = 0u; j < instr->numArgs; j++, i++) {
+        for (std::size_t j = 0u; j < instr.numArgs; j++, i++) {
             std::printf(" ");
             if (i >= size) {
-                std::printf(" <too few arguments (need %zx)>\n", instr->numArgs);
+                std::printf(" <too few arguments (need %zx)>\n", instr.numArgs);
                 throw InvalidArgumentsException();
             }
             printNormalHex(&c[i].uint64[0], 8u);
