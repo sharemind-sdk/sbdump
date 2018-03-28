@@ -171,6 +171,7 @@ void addCodeSection(void const * data,
         }
         std::printf("\n");
     }
+    std::printf("\n");
 }
 
 #define RP_RETURN_ERR(e,p) \
