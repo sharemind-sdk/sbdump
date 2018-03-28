@@ -118,7 +118,7 @@ void printHex(void const * data,
         if ((offset % 16u) == 0u) {
             std::printf("\n  %08zx U%zxS%zx+%08zx  ", realOffset, ui, si, offset);
         } else if ((offset % 8u) == 0u) {
-            std::printf(" ");
+            std::putc(' ', stdout);
         }
     }
 }
@@ -142,7 +142,7 @@ void addCodeSection(void const * data,
         auto const & cm = sharemind::instructionCodeMap();
         auto const instrIt = cm.find(c[i].uint64[0]);
         if (instrIt == cm.end()) {
-            std::printf("<invalid instruction>\n");
+            std::puts("<invalid instruction>\n");
             throw InvalidInstructionException();
         }
         auto const & instr = instrIt->second;
@@ -162,16 +162,16 @@ void addCodeSection(void const * data,
 
         i++;
         for (std::size_t j = 0u; j < instr.numArgs; j++, i++) {
-            std::printf(" ");
+            std::putc(' ', stdout);
             if (i >= size) {
                 std::printf(" <too few arguments (need %zx)>\n", instr.numArgs);
                 throw InvalidArgumentsException();
             }
             printNormalHex(&c[i].uint64[0], 8u);
         }
-        std::printf("\n");
+        std::putc('\n', stdout);
     }
-    std::printf("\n");
+    std::putc('\n', stdout);
 }
 
 #define RP_RETURN_ERR(e,p) \
@@ -226,7 +226,7 @@ bool readProgram(void const * const data, std::size_t const dataSize) {
             std::printf("%s):\n\n", unitTypeRaw);
         } else {
             printSpacedHex(unitTypeRaw, 32u);
-            std::printf("):\n\n");
+            std::puts("):\n");
         }
 
         char sectionTypeRaw[33];
@@ -252,7 +252,7 @@ bool readProgram(void const * const data, std::size_t const dataSize) {
     do { \
         std::printf("Start of section %zx (", si); \
         if (sectionType != SHAREMIND_EXECUTABLE_SECTION_TYPE_INVALID) { \
-            std::printf("%s", sectionTypeRaw); \
+            std::fputs(sectionTypeRaw, stdout); \
         } else { \
             printSpacedHex(sectionTypeRaw, 32u); \
         } \
@@ -263,7 +263,7 @@ bool readProgram(void const * const data, std::size_t const dataSize) {
     do { \
         PRINT_SECTION_HEADER; \
         printHex(data, pos, sh.length, ui, si); \
-        std::printf("\n\n"); \
+        std::puts("\n"); \
         pos = sharemind::ptrAdd(pos, sh.length + extraPadding[sh.length % 8]); \
     } while(false)
 #define PRINT_BINDSECTION_CASE(utype) \
@@ -285,7 +285,7 @@ bool readProgram(void const * const data, std::size_t const dataSize) {
             bi++; \
         } while (pos != endPos); \
         pos = sharemind::ptrAdd(pos, extraPadding[sh.length % 8]); \
-        std::printf("\n"); \
+        std::putc('\n', stdout); \
     } break;
 
             using U = std::underlying_type<decltype(sectionType)>::type;
