@@ -31,7 +31,7 @@ SharemindSetProjectVersion()
 FIND_PACKAGE(LogHard REQUIRED)
 FIND_PACKAGE(SharemindCHeaders REQUIRED)
 FIND_PACKAGE(SharemindCxxHeaders REQUIRED)
-FIND_PACKAGE(SharemindLibExecutable REQUIRED)
+FIND_PACKAGE(SharemindLibExecutable 0.2.0 REQUIRED)
 FIND_PACKAGE(SharemindLibVmi 0.2.0 REQUIRED)
 
 
@@ -80,7 +80,7 @@ SharemindAddComponentPackage("bin"
     DEB_SECTION "net"
     DEB_DEPENDS
         "libloghard (>= 0.1.0)"
-        "libsharemind-executable (>= 0.1.0)"
+        "libsharemind-executable (>= 0.2.0)"
         "libsharemind-vmi (>= 0.2.0)"
         "libstdc++6 (>= 4.8.0)"
         "libc6 (>= 2.19)"

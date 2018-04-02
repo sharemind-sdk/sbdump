@@ -85,15 +85,6 @@ DEFINE_EXCEPTION(DuplicatePdBind, "Duplicate protection domain binding!")
 
 constexpr std::size_t extraPadding[8] = { 0u, 7u, 6u, 5u, 4u, 3u, 2u, 1u };
 
-void printSpacedHex(void const * data, std::size_t size) {
-    if (size <= 0u)
-        return;
-    auto * c = static_cast<char const *>(data);
-    std::printf("%02x", static_cast<unsigned>(*c));
-    while (--size)
-        std::printf(" %02x", static_cast<unsigned>(*++c));
-}
-
 void printNormalHex(void const * data, std::size_t size) {
     for (auto * c = static_cast<unsigned char const *>(data); size; ++c, --size)
         std::printf("%02x", static_cast<unsigned>(*c));
@@ -189,89 +180,78 @@ void addCodeSection(void const * data,
 bool readProgram(void const * const data, std::size_t const dataSize) {
     assert(data);
 
-    if (dataSize < sizeof(SharemindExecutableCommonHeader))
+    if (dataSize < sizeof(sharemind::ExecutableCommonHeader))
         RP_RETURN_ERR(InvalidHeader, data);
 
-    SharemindExecutableCommonHeader ch;
-    if (SharemindExecutableCommonHeader_read(data, &ch)
-        != SHAREMIND_EXECUTABLE_READ_OK)
+    sharemind::ExecutableCommonHeader ch;
+    if (!ch.deserializeFrom(data))
         RP_RETURN_ERR(InvalidHeader, data);
 
-    if (ch.fileFormatVersion > 0u)
+    if (ch.fileFormatVersion() > 0u)
         /** \todo new error code? */
         RP_RETURN_ERR(InvalidHeader, data);
 
     void const * pos =
-            sharemind::ptrAdd(data, sizeof(SharemindExecutableCommonHeader));
+            sharemind::ptrAdd(data, sizeof(sharemind::ExecutableCommonHeader));
 
-    SharemindExecutableHeader0x0 h;
-    if (SharemindExecutableHeader0x0_read(pos, &h)
-        != SHAREMIND_EXECUTABLE_READ_OK)
+    sharemind::ExecutableHeader0x0 h;
+    if (!h.deserializeFrom(pos))
         RP_RETURN_ERR(InvalidHeader, pos);
 
-    pos = sharemind::ptrAdd(pos, sizeof(SharemindExecutableHeader0x0));
+    pos = sharemind::ptrAdd(pos, sizeof(sharemind::ExecutableHeader0x0));
 
-    static char const LU_NAME[33] = "Linking Unit";
-    char unitTypeRaw[33];
-    unitTypeRaw[32] = '\0';
-    for (std::size_t ui = 0; ui <= h.numberOfUnitsMinusOne; ui++) {
-        SharemindExecutableUnitHeader0x0 uh;
-        if (SharemindExecutableUnitHeader0x0_read(pos, &uh)
-            != SHAREMIND_EXECUTABLE_READ_OK)
+    for (std::size_t ui = 0; ui <= h.numberOfLinkingUnitsMinusOne(); ui++) {
+        sharemind::ExecutableLinkingUnitHeader0x0 uh;
+        if (!uh.deserializeFrom(pos))
             RP_RETURN_ERR(InvalidHeader, pos);
 
-        std::memcpy(unitTypeRaw, uh.type, 32u);
-        std::printf("Start of unit %zx (", ui);
-        if (std::memcmp(LU_NAME, unitTypeRaw, 32u) == 0u) {
-            std::printf("%s):\n\n", unitTypeRaw);
-        } else {
-            printSpacedHex(unitTypeRaw, 32u);
-            std::puts("):\n");
-        }
+        std::printf("Start of unit %zx:\n\n", ui);
 
-        char sectionTypeRaw[33];
-        sectionTypeRaw[32] = '\0';
-        pos = sharemind::ptrAdd(pos, sizeof(SharemindExecutableUnitHeader0x0));
-        for (std::size_t si = 0u; si <= uh.sectionsMinusOne; si++) {
-            SharemindExecutableSectionHeader0x0 sh;
-            if (SharemindExecutableSectionHeader0x0_read(pos, &sh)
-                != SHAREMIND_EXECUTABLE_READ_OK)
+        pos = sharemind::ptrAdd(pos, sizeof(uh));
+        for (std::size_t si = 0u; si <= uh.numberOfSectionsMinusOne(); si++) {
+            sharemind::ExecutableSectionHeader0x0 sh;
+            if (!sh.deserializeFrom(pos))
                 RP_RETURN_ERR(InvalidHeader, pos);
 
-            std::memcpy(sectionTypeRaw, sh.type, 32u);
-            pos = sharemind::ptrAdd(pos,
-                                    sizeof(SharemindExecutableSectionHeader0x0));
+            pos = sharemind::ptrAdd(pos, sizeof(sh));
 
-            SHAREMIND_EXECUTABLE_SECTION_TYPE sectionType =
-                    SharemindExecutableSectionHeader0x0_type(&sh);
+            auto const sectionType = sh.type();
+            auto const sectionSize = sh.size();
 
-            static_assert(std::numeric_limits<decltype(sh.length)>::max()
+            static_assert(std::numeric_limits<decltype(sh)::SizeType>::max()
                           <= std::numeric_limits<std::size_t>::max(), "");
 
-#define PRINT_SECTION_HEADER \
-    do { \
-        std::printf("Start of section %zx (", si); \
-        if (sectionType != SHAREMIND_EXECUTABLE_SECTION_TYPE_INVALID) { \
-            std::fputs(sectionTypeRaw, stdout); \
-        } else { \
-            printSpacedHex(sectionTypeRaw, 32u); \
-        } \
-        std::printf(") of size %" PRIu32 ":\n", sh.length); \
-    } while(false)
-
-#define PRINT_DATASECTION \
-    do { \
-        PRINT_SECTION_HEADER; \
-        printHex(data, pos, sh.length, ui, si); \
-        std::puts("\n"); \
-        pos = sharemind::ptrAdd(pos, sh.length + extraPadding[sh.length % 8]); \
-    } while(false)
+            using ST = decltype(sh.type());
+            static auto const sectionTypeToString =
+                    [](ST const sectionType_) noexcept {
+                        switch (sectionType_) {
+                        case ST::Bind: return "BIND";
+                        case ST::Bss: return "BSS";
+                        case ST::Data: return "DATA";
+                        case ST::Debug: return "DEBUG";
+                        case ST::PdBind: return "PDBIND";
+                        case ST::RoData: return "RODATA";
+                        case ST::Text: return "TEXT";
+                        default: return "<INVALID>";
+                        }
+                    };
+            auto const printSectionHeader =
+                    [&si, &sectionType, &sectionSize]() noexcept {
+                        static_assert(
+                                std::is_same<decltype(sectionSize),
+                                             std::uint32_t const>::value, "");
+                        std::printf("Start of section %zx (%s) of size %" PRIu32
+                                    ":\n",
+                                    si,
+                                    sectionTypeToString(sectionType),
+                                    sectionSize);
+                    };
 #define PRINT_BINDSECTION_CASE(utype) \
-    case SHAREMIND_EXECUTABLE_SECTION_TYPE_ ## utype: { \
-        PRINT_SECTION_HEADER; \
-        if (sh.length <= 0) \
+    case ST::utype: { \
+        printSectionHeader(); \
+        if (sectionSize <= 0) \
             break; \
-        auto * endPos = sharemind::ptrAdd(pos, sh.length); \
+        auto * endPos = sharemind::ptrAdd(pos, sectionSize); \
         /* Check for 0-termination: */ \
         if (unlikely(*static_cast<char const *>(sharemind::ptrSub(endPos, 1))))\
             RP_RETURN_ERR(InvalidInputFile, pos); \
@@ -284,36 +264,38 @@ bool readProgram(void const * const data, std::size_t const dataSize) {
             pos = sharemind::ptrAdd(pos, len + 1); \
             bi++; \
         } while (pos != endPos); \
-        pos = sharemind::ptrAdd(pos, extraPadding[sh.length % 8]); \
+        pos = sharemind::ptrAdd(pos, extraPadding[sectionSize % 8]); \
         std::putc('\n', stdout); \
     } break;
 
-            using U = std::underlying_type<decltype(sectionType)>::type;
-            switch (static_cast<U>(sectionType)) {
+            switch (sectionType) {
 
-                case SHAREMIND_EXECUTABLE_SECTION_TYPE_TEXT: {
-                    PRINT_SECTION_HEADER;
-                    addCodeSection(data, pos, sh.length, ui, si);
+                case ST::Text: {
+                    printSectionHeader();
+                    addCodeSection(data, pos, sh.size(), ui, si);
 
                     pos = sharemind::ptrAdd(pos,
-                                            sh.length
+                                            sh.size()
                                             * sizeof(SharemindCodeBlock));
                 } break;
 
-                case SHAREMIND_EXECUTABLE_SECTION_TYPE_BSS: {
-                    PRINT_SECTION_HEADER;
+            case ST::Bss: {
+                    printSectionHeader();
                     printf("BSS Section virtual size: %zx\n\n",
-                           static_cast<std::size_t>(sh.length));
+                           static_cast<std::size_t>(sh.size()));
                 } break;
 
-                PRINT_BINDSECTION_CASE(BIND)
-                PRINT_BINDSECTION_CASE(PDBIND)
+                PRINT_BINDSECTION_CASE(Bind)
+                PRINT_BINDSECTION_CASE(PdBind)
 
-                case SHAREMIND_EXECUTABLE_SECTION_TYPE_RODATA:
-                case SHAREMIND_EXECUTABLE_SECTION_TYPE_DATA:
-                default:
-                    PRINT_DATASECTION;
-                    break;
+            default:
+                printSectionHeader();
+                printHex(data, pos, sectionSize, ui, si);
+                std::puts("\n");
+                pos = sharemind::ptrAdd(pos,
+                                        sectionSize
+                                        + extraPadding[sectionSize % 8]);
+                break;
             }
         }
     }
