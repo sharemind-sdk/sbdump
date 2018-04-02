@@ -33,6 +33,7 @@
 #include <sharemind/Concat.h>
 #include <sharemind/Exception.h>
 #include <sharemind/ExceptionMacros.h>
+#include <sharemind/EndianMacros.h>
 #include <sharemind/FileDescriptor.h>
 #include <sharemind/codeblock.h>
 #include <sharemind/IntegralComparisons.h>
@@ -85,11 +86,6 @@ DEFINE_EXCEPTION(DuplicatePdBind, "Duplicate protection domain binding!")
 
 constexpr std::size_t extraPadding[8] = { 0u, 7u, 6u, 5u, 4u, 3u, 2u, 1u };
 
-void printNormalHex(void const * data, std::size_t size) {
-    for (auto * c = static_cast<unsigned char const *>(data); size; ++c, --size)
-        std::printf("%02x", static_cast<unsigned>(*c));
-}
-
 void printHex(void const * data,
               void const * pos,
               std::size_t size,
@@ -139,7 +135,6 @@ void addCodeSection(void const * data,
         auto const & instr = instrIt->second;
         if (fullNames) {
             std::fputs(instr.fullName, stdout);
-            std::putc(' ', stdout);
         } else {
             // Only strip first component:
             auto const end = instr.fullName + instr.fullNameSize;
@@ -148,17 +143,27 @@ void addCodeSection(void const * data,
             ++name;
             assert(*name);
             std::fputs(name, stdout);
-            std::putc(' ', stdout);
         }
 
         i++;
+        auto argPrefix = " 0x";
         for (std::size_t j = 0u; j < instr.numArgs; j++, i++) {
-            std::putc(' ', stdout);
+            std::fputs(argPrefix, stdout);
+            argPrefix = ", 0x";
             if (i >= size) {
                 std::printf(" <too few arguments (need %zx)>\n", instr.numArgs);
                 throw InvalidArgumentsException();
             }
-            printNormalHex(&c[i].uint64[0], 8u);
+            auto const toPrint = sharemind::littleEndianToHost(c[i].uint64[0]);
+            if (toPrint <= 0xff) {
+                std::printf("%02" PRIx64, toPrint);
+            } else if (toPrint <= 0xffff) {
+                std::printf("%04" PRIx64, toPrint);
+            } else if (toPrint <= 0xffffffff) {
+                std::printf("%08" PRIx64, toPrint);
+            } else {
+                std::printf("%016" PRIx64, toPrint);
+            }
         }
         std::putc('\n', stdout);
     }
