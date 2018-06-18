@@ -89,5 +89,5 @@ SharemindAddComponentPackage(debug
     NAME "sbdump-dbg"
     DESCRIPTION "Sharemind bytecode dumper debug symbols"
     DEB_SECTION "debug"
-    DEB_DEPENDS "sbdump (= ${SharemindSbDump_VERSION})")
+    DEB_DEPENDS "sbdump (= ${SharemindSbDump_DEB_bin_PACKAGE_VERSION})")
 SharemindPackagingFinalize()
