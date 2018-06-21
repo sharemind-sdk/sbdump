@@ -28,7 +28,7 @@ FIND_PACKAGE(SharemindCMakeHelpers 1.2 REQUIRED)
 SharemindSetProjectVersion()
 
 
-FIND_PACKAGE(LogHard REQUIRED)
+FIND_PACKAGE(LogHard 0.3.0 REQUIRED)
 FIND_PACKAGE(SharemindCHeaders 1.1.0 REQUIRED)
 FIND_PACKAGE(SharemindCxxHeaders 0.4.0 REQUIRED)
 FIND_PACKAGE(SharemindLibExecutable 0.2.0 REQUIRED)
@@ -79,7 +79,7 @@ SharemindAddComponentPackage("bin"
     DESCRIPTION "Sharemind bytecode dumper"
     DEB_SECTION "net"
     DEB_DEPENDS
-        "libloghard (>= 0.1.0)"
+        "libloghard (>= 0.3.0)"
         "libsharemind-executable (>= 0.2.0)"
         "libsharemind-vmi (>= 0.2.0)"
         "libstdc++6 (>= 4.8.0)"
