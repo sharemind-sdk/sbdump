@@ -30,7 +30,7 @@ FIND_PACKAGE(LogHard 0.3.0 REQUIRED)
 FIND_PACKAGE(SharemindCHeaders 1.1.0 REQUIRED)
 FIND_PACKAGE(SharemindCxxHeaders 0.4.0 REQUIRED)
 FIND_PACKAGE(SharemindLibExecutable 0.2.0 REQUIRED)
-FIND_PACKAGE(SharemindLibVmi 0.2.0 REQUIRED)
+FIND_PACKAGE(SharemindLibVmi 0.2.2 REQUIRED)
 
 
 # sbdump:
