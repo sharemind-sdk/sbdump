@@ -34,7 +34,14 @@ FIND_PACKAGE(SharemindLibVmi 0.2.2 REQUIRED)
 
 
 # sbdump:
-SharemindSetCxx11CompileOptions()
+IF("${SharemindCxxHeaders_VERSION}" VERSION_LESS "0.6.0")
+    SharemindSetCxx11CompileOptions()
+ELSEIF("${SharemindCMakeHelpers_VERSION}" VERSION_LESS "1.4")
+    MESSAGE(FATAL_ERROR
+            "Incompatible combination of CMakeHelpers and CxxHeaders versions!")
+ELSE()
+    SharemindSetCxx14CompileOptions()
+ENDIF()
 FILE(GLOB_RECURSE SharemindSbDump_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 FILE(GLOB_RECURSE SharemindSbDump_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
 SharemindAddExecutable("sbdump"
