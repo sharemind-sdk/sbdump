@@ -23,45 +23,35 @@ PROJECT(SharemindSbDump VERSION 1.3.0 LANGUAGES "CXX")
 INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/config.local" OPTIONAL)
 INCLUDE("${CMAKE_CURRENT_BINARY_DIR}/config.local" OPTIONAL)
 
-FIND_PACKAGE(SharemindCMakeHelpers 1.3 REQUIRED)
+FIND_PACKAGE(SharemindCMakeHelpers 1.6 REQUIRED)
 
 
-FIND_PACKAGE(LogHard 0.3.0 REQUIRED)
-FIND_PACKAGE(SharemindCHeaders 1.1.0 REQUIRED)
-FIND_PACKAGE(SharemindCxxHeaders 0.4.0 REQUIRED)
-FIND_PACKAGE(SharemindLibExecutable 0.2.0 REQUIRED)
-FIND_PACKAGE(SharemindLibVmi 0.2.2 REQUIRED)
+FIND_PACKAGE(LogHard 0.5.0 REQUIRED)
+FIND_PACKAGE(SharemindCHeaders 1.3.0 REQUIRED)
+FIND_PACKAGE(SharemindCxxHeaders 0.8.0 REQUIRED)
+FIND_PACKAGE(SharemindLibExecutable 0.4.0 REQUIRED)
+FIND_PACKAGE(SharemindLibVmi 0.4.0 REQUIRED)
 
 
-# sbdump:
+# SbDump:
 SharemindSetCxx14CompileOptions()
 FILE(GLOB_RECURSE SharemindSbDump_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 FILE(GLOB_RECURSE SharemindSbDump_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
-SharemindAddExecutable("sbdump"
+SharemindAddExecutable(SbDump
+    OUTPUT_NAME "sbdump"
     SOURCES
         ${SharemindSbDump_SOURCES}
         ${SharemindSbDump_HEADERS}
-    INCLUDE_DIRECTORIES
-        ${LogHard_INCLUDE_DIRS}
-        ${SharemindCHeaders_INCLUDE_DIRS}
-        ${SharemindCxxHeaders_INCLUDE_DIRS}
-        ${SharemindLibExecutable_INCLUDE_DIRS}
-        ${SharemindLibVmi_INCLUDE_DIRS}
-    COMPILE_DEFINITIONS
-        "_XOPEN_SOURCE=700"
-    LEGACY_DEFINITIONS
-        ${LogHard_DEFINITIONS}
-        ${SharemindCHeaders_DEFINITIONS}
-        ${SharemindCxxHeaders_DEFINITIONS}
-        ${SharemindLibExecutable_DEFINITIONS}
-        ${SharemindLibVmi_DEFINITIONS}
-    LINK_LIBRARIES
-        ${LogHard_LIBRARIES}
-        ${SharemindCHeaders_LIBRARIES}
-        ${SharemindCxxHeaders_LIBRARIES}
-        ${SharemindLibExecutable_LIBRARIES}
-        ${SharemindLibVmi_LIBRARIES}
 )
+TARGET_COMPILE_DEFINITIONS(SbDump PRIVATE "_XOPEN_SOURCE=700")
+TARGET_LINK_LIBRARIES(SbDump
+    PRIVATE
+        LogHard::LogHard
+        Sharemind::CHeaders
+        Sharemind::CxxHeaders
+        Sharemind::LibExecutable
+        Sharemind::LibVmi
+    )
 
 
 # SyscallAtBlock.awk:
@@ -77,9 +67,9 @@ SharemindAddComponentPackage("bin"
     DESCRIPTION "Sharemind bytecode dumper"
     DEB_SECTION "net"
     DEB_DEPENDS
-        "libloghard (>= 0.3.0)"
-        "libsharemind-executable (>= 0.2.0)"
-        "libsharemind-vmi (>= 0.2.0)"
+        "libloghard (>= 0.5.0)"
+        "libsharemind-executable (>= 0.4.0)"
+        "libsharemind-vmi (>= 0.4.0)"
         "libstdc++6 (>= 4.8.0)"
         "libc6 (>= 2.19)"
 )
