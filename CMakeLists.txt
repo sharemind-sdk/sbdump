@@ -34,7 +34,6 @@ FIND_PACKAGE(SharemindLibVmi 0.4.0 REQUIRED)
 
 
 # SbDump:
-SharemindSetCxx14CompileOptions()
 FILE(GLOB_RECURSE SharemindSbDump_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 FILE(GLOB_RECURSE SharemindSbDump_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
 SharemindAddExecutable(SbDump
