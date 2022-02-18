@@ -30,7 +30,7 @@ FIND_PACKAGE(LogHard 0.5.0 REQUIRED)
 FIND_PACKAGE(SharemindCHeaders 1.3.0 REQUIRED)
 FIND_PACKAGE(SharemindCxxHeaders 0.9.0 REQUIRED)
 FIND_PACKAGE(SharemindLibExecutable 0.4.0 REQUIRED)
-FIND_PACKAGE(SharemindLibVmi 0.4.0 REQUIRED)
+FIND_PACKAGE(SharemindLibVmi 0.5.0 REQUIRED)
 
 
 # SbDump:
@@ -68,7 +68,7 @@ SharemindAddComponentPackage("bin"
     DEB_DEPENDS
         "libloghard (>= 0.5.0)"
         "libsharemind-executable (>= 0.4.0)"
-        "libsharemind-vmi (>= 0.4.0)"
+        "libsharemind-vmi (>= 0.5.0)"
         "libstdc++6 (>= 4.8.0)"
         "libc6 (>= 2.19)"
 )
